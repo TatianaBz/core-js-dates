@@ -59,7 +59,7 @@ function getDayName(date) {
     'Saturday',
   ];
   const day = new Date(date).getDay();
-  return days[day];
+  return days[day.getUTCDay()];
 }
 /**
  * Returns the date of the next Friday from a given date.
@@ -152,7 +152,9 @@ function isDateInPeriod(date, period) {
  */
 function formatDate(date) {
   const time = new Date(date);
-  return `${time.getMonth()}/${time.getDate()}/${time.getFullYear()}`;
+  let hour = time.getHours();
+  if (hour >= 12) hour -= 12;
+  return `${time.getMonth() + 1}/${time.getDate()}/${time.getFullYear()} ${hour}:${time.getMinutes()}:00`;
 }
 
 /**
@@ -167,8 +169,22 @@ function formatDate(date) {
  * 12, 2023 => 10
  * 1, 2024 => 8
  */
-function getCountWeekendsInMonth(/* month, year */) {
-  throw new Error('Not implemented');
+function getCountWeekendsInMonth(month, year) {
+  const months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  let day;
+  if (month !== 2) {
+    day = months[month - 1];
+  }
+  if (new Date(year, 2, 0).getDate() !== 29) {
+    day = 28;
+  }
+  day = 29;
+  let weekend = 0;
+  for (let i = 1; i <= day; i += 1) {
+    const d = new Date(year, year, i).getDay();
+    if (d === 0 || d === 6) weekend += 1;
+  }
+  return weekend;
 }
 
 /**
@@ -186,12 +202,12 @@ function getCountWeekendsInMonth(/* month, year */) {
  */
 function getWeekNumberByDate(date) {
   const months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  const oneweek = 7 - new Date(new Date(date).getFullYear(), 0, 1);
+  const oneweek = 6 - new Date(new Date(date).getFullYear(), 0, 1);
   let summ = 0;
-  for (let i = 0; i < new Date(date).getMonth(); i += 1) {
+  for (let i = 0; i <= new Date(date).getMonth(); i += 1) {
     summ += months[i];
   }
-  return (summ - oneweek + new Date(date).getMonth()) % 7;
+  return (summ - oneweek + new Date(date).getDay()) / 7;
 }
 /**
  * Returns the date of the next Friday the 13th from a given date.
@@ -219,8 +235,10 @@ function getNextFridayThe13th(/* date */) {
  * Date(2024, 5, 1) => 2
  * Date(2024, 10, 10) => 4
  */
-function getQuarter(/* date */) {
-  throw new Error('Not implemented');
+function getQuarter(date) {
+  return new Date(date).getMonth() <= 3
+    ? 1
+    : Math.ceil((new Date(date).getMonth() + 1) / 3);
 }
 
 /**
